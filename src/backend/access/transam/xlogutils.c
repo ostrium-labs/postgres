@@ -501,7 +501,7 @@ XLogReadBufferExtended(RelFileLocator rlocator, ForkNumber forknum,
 	}
 
 	/* Open the relation at smgr level */
-	smgr = smgropen(rlocator, INVALID_PROC_NUMBER);
+	smgr = smgropen(rlocator, INVALID_PROC_NUMBER, RELPERSISTENCE_PERMANENT);
 
 	/*
 	 * Create the target file if it doesn't already exist.  This lets us cope
@@ -630,7 +630,8 @@ CreateFakeRelcacheEntry(RelFileLocator rlocator)
 	 * Set up a non-pinned SMgrRelation reference, so that we don't need to
 	 * worry about unpinning it on error.
 	 */
-	rel->rd_smgr = smgropen(rlocator, INVALID_PROC_NUMBER);
+	rel->rd_smgr = smgropen(rlocator, INVALID_PROC_NUMBER,
+							RELPERSISTENCE_PERMANENT);
 
 	return rel;
 }
