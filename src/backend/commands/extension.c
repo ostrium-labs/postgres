@@ -566,6 +566,9 @@ find_extension_control_filename(ExtensionControlFile *control)
 static char *
 get_extension_script_directory(ExtensionControlFile *control)
 {
+	char	   *result;
+	struct stat fst;
+
 	/*
 	 * The directory parameter can be omitted, absolute, or relative to the
 	 * installation's base directory, which can be the sharedir or a custom
@@ -579,7 +582,13 @@ get_extension_script_directory(ExtensionControlFile *control)
 		return pstrdup(control->directory);
 
 	Assert(control->basedir != NULL);
-	return psprintf("%s/%s", control->basedir, control->directory);
+	result = psprintf("%s/%s", control->basedir, control->directory);
+
+	/* Neon: if the directory does not exist, check remote extension storage */
+	if (stat(result, &fst) < 0 && download_extension_file_hook != NULL)
+		download_extension_file_hook(control->directory, false);
+
+	return result;
 }
 
 static char *
@@ -1830,6 +1839,13 @@ CreateExtensionInternal(char *extensionName,
 	 * will get us there.
 	 */
 	filename = get_extension_script_filename(pcontrol, NULL, versionName);
+
+	// request download of extension files from compute_ctl
+	if (download_extension_file_hook != NULL)
+	{
+		download_extension_file_hook(extensionName, false);
+	}
+
 	if (stat(filename, &fst) == 0)
 	{
 		/* Easy, no extra scripts */

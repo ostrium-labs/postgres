@@ -27,6 +27,7 @@
 #include "storage/shmem.h"
 #include "utils/hsearch.h"
 
+download_extension_file_hook_type download_extension_file_hook = NULL;
 
 /* signature for PostgreSQL-specific library init function */
 typedef void (*PG_init_t) (void);
@@ -71,11 +72,13 @@ char	   *Dynamic_library_path;
 static void *internal_load_library(const char *libname);
 pg_noreturn static void incompatible_module_error(const char *libname,
 												  const Pg_abi_values *module_magic_data);
-static char *expand_dynamic_library_name(const char *name);
+static char *expand_dynamic_library_name(const char *name, bool *is_found);
 static void check_restricted_library_name(const char *name);
 
 /* ABI values that module needs to match to be accepted */
 static const Pg_abi_values magic_data = PG_MODULE_ABI_DATA;
+
+static void neon_try_load(const char *name);
 
 
 /*
@@ -98,6 +101,7 @@ load_external_function(const char *filename, const char *funcname,
 	char	   *fullname;
 	void	   *lib_handle;
 	void	   *retval;
+	bool 		is_found = true;
 
 	/*
 	 * For extensions with hardcoded '$libdir/' library names, we strip the
@@ -115,7 +119,17 @@ load_external_function(const char *filename, const char *funcname,
 	}
 
 	/* Expand the possibly-abbreviated filename to an exact path name */
-	fullname = expand_dynamic_library_name(filename);
+	fullname = expand_dynamic_library_name(filename, &is_found);
+
+	// if file is not found, try to download it from compute_ctl
+	if (!is_found && download_extension_file_hook != NULL)
+	{
+		// try to download the file
+		elog(DEBUG3, "load_external_function: try to download file: %s", fullname);
+		neon_try_load(fullname);
+		// try to find file locally once again
+		fullname = expand_dynamic_library_name(filename, &is_found);
+	}
 
 	/* Load the shared library, unless we already did */
 	lib_handle = internal_load_library(fullname);
@@ -137,6 +151,47 @@ load_external_function(const char *filename, const char *funcname,
 	return retval;
 }
 
+void
+neon_try_load(const char *name)
+{
+	bool have_slash;
+	char *request_name;
+
+	// add .so suffix if it is not present
+	if (strstr(name, DLSUFFIX) == NULL)
+	{
+		request_name = psprintf("%s%s", name, DLSUFFIX);
+		elog(DEBUG3, "neon_try_load: add DLSUFFIX: %s", request_name);
+	}
+	else
+	{
+		request_name = pstrdup(name);
+		elog(DEBUG3, "neon_try_load: DLSUFFIX already present: %s", request_name);
+	}
+
+	have_slash = (first_dir_separator(request_name) != NULL);
+
+	if (strncmp(request_name, "$libdir/", strlen("$libdir/")) == 0)
+	{
+		char *new_request_name = psprintf("%s", request_name + strlen("$libdir/"));
+		pfree(request_name);
+		request_name = new_request_name;
+
+		elog(DEBUG3, "neon_try_load: omit $libdir/: %s", request_name);
+	}
+	else if (have_slash)
+	{
+		ereport(ERROR,
+				(errcode(ERRCODE_INVALID_NAME),
+					errmsg("unexpected path in dynamic library name: %s",
+						name)));
+	}
+
+	elog(DEBUG3, "neon_try_load: final request_name: %s", request_name);
+
+	download_extension_file_hook(request_name, true);
+}
+
 /*
  * This function loads a shlib file without looking up any particular
  * function in it.  If the same shlib has previously been loaded,
@@ -149,13 +204,24 @@ void
 load_file(const char *filename, bool restricted)
 {
 	char	   *fullname;
+	bool 		is_found = true;
 
 	/* Apply security restriction if requested */
 	if (restricted)
 		check_restricted_library_name(filename);
 
 	/* Expand the possibly-abbreviated filename to an exact path name */
-	fullname = expand_dynamic_library_name(filename);
+	fullname = expand_dynamic_library_name(filename, &is_found);
+
+	// if file is not found, try to download it from compute_ctl
+	if (!is_found && download_extension_file_hook != NULL)
+	{
+		// try to download the file
+		elog(DEBUG3, "load_file: try to download file: %s", fullname);
+		neon_try_load(fullname);
+		// try to find file locally once again
+		fullname = expand_dynamic_library_name(filename, &is_found);
+	}
 
 	/* Load the shared library, unless we already did */
 	(void) internal_load_library(fullname);
@@ -463,7 +529,7 @@ get_loaded_module_details(DynamicFileList *dfptr,
  * The result will always be freshly palloc'd.
  */
 static char *
-expand_dynamic_library_name(const char *name)
+expand_dynamic_library_name(const char *name, bool *is_found)
 {
 	bool		have_slash;
 	char	   *new;
@@ -509,6 +575,7 @@ expand_dynamic_library_name(const char *name)
 	 * If we can't find the file, just return the string as-is. The ensuing
 	 * load attempt will fail and report a suitable message.
 	 */
+	*is_found = false;
 	return pstrdup(name);
 }
 
