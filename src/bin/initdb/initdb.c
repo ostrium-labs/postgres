@@ -3198,6 +3198,7 @@ main(int argc, char *argv[])
 		{"sync-method", required_argument, NULL, 19},
 		{"no-data-checksums", no_argument, NULL, 20},
 		{"no-sync-data-files", no_argument, NULL, 21},
+		{"sysid", required_argument, NULL, 22},
 		{NULL, 0, NULL, 0}
 	};
 
@@ -3394,6 +3395,11 @@ main(int argc, char *argv[])
 				break;
 			case 21:
 				sync_data_files = false;
+				break;
+			case 22:
+				extra_options = psprintf("%s -s %s",
+										 extra_options,
+										 optarg);
 				break;
 			default:
 				/* getopt_long already emitted a complaint */
