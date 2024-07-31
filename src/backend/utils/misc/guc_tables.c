@@ -88,6 +88,7 @@
 #include "storage/pg_shmem.h"
 #include "storage/predicate.h"
 #include "storage/procnumber.h"
+#include "storage/smgr.h"
 #include "storage/standby.h"
 #include "tcop/backend_startup.h"
 #include "tcop/tcopprot.h"
@@ -2151,6 +2152,15 @@ struct config_bool ConfigureNamesBool[] =
 		},
 		&vacuum_truncate,
 		true,
+		NULL, NULL, NULL
+	},
+
+	{
+		{"neon_test_evict", PGC_POSTMASTER, UNGROUPED,
+			gettext_noop("Evict unpinned pages (for better test coverage)"),
+		},
+		&zenith_test_evict,
+		false,
 		NULL, NULL, NULL
 	},
 
