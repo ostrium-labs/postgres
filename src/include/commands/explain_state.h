@@ -71,6 +71,9 @@ typedef struct ExplainState
 								 * entry */
 	/* state related to the current plan node */
 	ExplainWorkersState *workers_state; /* needed if parallel plan */
+	/* NEON addons */
+	bool		prefetch;		/* print prefetch statistic */
+	bool		file_cache;		/* print file cache statistic */
 	/* extensions */
 	void	  **extension_state;
 	int			extension_state_allocated;

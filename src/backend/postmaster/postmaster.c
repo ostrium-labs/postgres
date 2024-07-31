@@ -3482,6 +3482,20 @@ SignalChildren(int signal, BackendTypeMask targetMask)
 				bp->bkend_type = B_WAL_SENDER;
 		}
 
+		/*
+		 * Neon: the walproposer is a background worker that announces itself
+		 * as a WAL sender, so that it is shut down last. If we need to
+		 * distinguish between B_BG_WORKER and B_WAL_SENDER, check if any
+		 * B_BG_WORKER backends have recently announced that they are actually
+		 * WAL senders.
+		 */
+		if (btmask_contains(targetMask, B_WAL_SENDER) != btmask_contains(targetMask, B_BG_WORKER) &&
+			bp->bkend_type == B_BG_WORKER)
+		{
+			if (IsPostmasterChildWalSender(bp->child_slot))
+				bp->bkend_type = B_WAL_SENDER;
+		}
+
 		if (!btmask_contains(targetMask, bp->bkend_type))
 			continue;
 
@@ -3911,6 +3925,20 @@ CountChildren(BackendTypeMask targetMask)
 		 */
 		if (btmask_contains(targetMask, B_WAL_SENDER) != btmask_contains(targetMask, B_BACKEND) &&
 			bp->bkend_type == B_BACKEND)
+		{
+			if (IsPostmasterChildWalSender(bp->child_slot))
+				bp->bkend_type = B_WAL_SENDER;
+		}
+
+		/*
+		 * Neon: the walproposer is a background worker that announces itself
+		 * as a WAL sender, so that it is shut down last. If we need to
+		 * distinguish between B_BG_WORKER and B_WAL_SENDER, check if any
+		 * B_BG_WORKER backends have recently announced that they are actually
+		 * WAL senders.
+		 */
+		if (btmask_contains(targetMask, B_WAL_SENDER) != btmask_contains(targetMask, B_BG_WORKER) &&
+			bp->bkend_type == B_BG_WORKER)
 		{
 			if (IsPostmasterChildWalSender(bp->child_slot))
 				bp->bkend_type = B_WAL_SENDER;
