@@ -92,6 +92,10 @@ ParseExplainOptionList(ExplainState *es, List *options, ParseState *pstate)
 			es->verbose = defGetBoolean(opt);
 		else if (strcmp(opt->defname, "costs") == 0)
 			es->costs = defGetBoolean(opt);
+		else if (strcmp(opt->defname, "prefetch") == 0)
+			es->prefetch = defGetBoolean(opt);
+		else if (strcmp(opt->defname, "filecache") == 0)
+			es->file_cache = defGetBoolean(opt);
 		else if (strcmp(opt->defname, "buffers") == 0)
 		{
 			buffers_set = true;
