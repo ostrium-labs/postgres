@@ -6787,6 +6787,8 @@ GetLastWrittenLSNv(RelFileLocator relfilenode, ForkNumber forknum,
 	LastWrittenLsnCacheEntry* entry;
 
 	Assert(lastWrittenLsnCacheSize != 0);
+	Assert(nblocks > 0);
+	Assert(PointerIsValid(lsns));
 
 	LWLockAcquire(LastWrittenLsnLock, LW_SHARED);
 
@@ -6809,10 +6811,11 @@ GetLastWrittenLSNv(RelFileLocator relfilenode, ForkNumber forknum,
 				lsns[i] = entry->lsn;
 			else
 			{
-				lsns[i] = XLogCtl->maxLastWrittenLsn;
+				XLogRecPtr lsn;
+				lsns[i] = lsn = XLogCtl->maxLastWrittenLsn;
 
 				LWLockRelease(LastWrittenLsnLock);
-				SetLastWrittenLSNForBlock(lsns[i], relfilenode, forknum, blkno);
+				SetLastWrittenLSNForBlock(lsn, relfilenode, forknum, key.blockNum);
 				LWLockAcquire(LastWrittenLsnLock, LW_SHARED);
 			}
 		}
@@ -6828,6 +6831,9 @@ GetLastWrittenLSNv(RelFileLocator relfilenode, ForkNumber forknum,
 			if (entry->lsn > lsn)
 				lsn = entry->lsn;
 		}
+
+		for (int i = 0; i < nblocks; i++)
+			lsns[i] = lsn;
 	}
 	LWLockRelease(LastWrittenLsnLock);
 }
