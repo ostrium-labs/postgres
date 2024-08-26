@@ -227,6 +227,7 @@ static const char *const backend_options = "--single -F -O -j -c search_path=pg_
 
 /* Additional switches to pass to backend (either boot or standalone) */
 static char *extra_options = "";
+static char *extra_boot_options = "";
 
 static const char *const subdirs[] = {
 	"global",
@@ -1609,7 +1610,9 @@ bootstrap_template1(void)
 
 	initPQExpBuffer(&cmd);
 
-	printfPQExpBuffer(&cmd, "\"%s\" --boot %s %s", backend_exec, boot_options, extra_options);
+	printfPQExpBuffer(&cmd, "\"%s\" --boot %s %s %s",
+					  backend_exec, boot_options, extra_boot_options,
+					  extra_options);
 	appendPQExpBuffer(&cmd, " -X %d", wal_segment_size_mb * (1024 * 1024));
 	if (data_checksums)
 		appendPQExpBufferStr(&cmd, " -k");
@@ -3397,9 +3400,9 @@ main(int argc, char *argv[])
 				sync_data_files = false;
 				break;
 			case 22:
-				extra_options = psprintf("%s -s %s",
-										 extra_options,
-										 optarg);
+				extra_boot_options = psprintf("%s -s %s",
+											  extra_boot_options,
+											  optarg);
 				break;
 			default:
 				/* getopt_long already emitted a complaint */
