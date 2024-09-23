@@ -441,7 +441,7 @@ XLogReadBufferForRedoExtended(XLogReaderState *record,
 		 * redo routines that dirty init-fork buffers without restoring a
 		 * full-page image.
 		 */
-		if (forknum == INIT_FORKNUM)
+		if (forknum == INIT_FORKNUM && !am_wal_redo_postgres)
 			FlushOneBuffer(*buf);
 
 		return BLK_RESTORED;
