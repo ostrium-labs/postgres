@@ -992,7 +992,7 @@ ReplicationSlotDropPtr(ReplicationSlot *slot)
 	sprintf(path, "%s/%s", PG_REPLSLOT_DIR, NameStr(slot->data.name));
 	sprintf(tmppath, "%s/%s.tmp", PG_REPLSLOT_DIR, NameStr(slot->data.name));
 
-	if (SlotIsLogical(slot))
+	if (SlotIsLogical(slot) && XLogInsertAllowed())
 	{
 		/* NEON specific: delete slot from storage using logical message */
 		char		prefix[MAXPGPATH];
@@ -2390,7 +2390,7 @@ SaveSlotToPath(ReplicationSlot *slot, const char *dir, int elevel)
 				ReplicationSlotOnDiskChecksummedSize);
 	FIN_CRC32C(cp.checksum);
 
-	if (SlotIsLogical(slot) && cp.slotdata.restart_lsn != InvalidXLogRecPtr)
+	if (SlotIsLogical(slot) && XLogInsertAllowed() && cp.slotdata.restart_lsn != InvalidXLogRecPtr)
 	{
 		/* NEON specific: persist slot in storage using logical message */
 		char		prefix[MAXPGPATH];
