@@ -8073,7 +8073,8 @@ PreCheckPointGuts(int flags)
 static void
 CheckPointGuts(XLogRecPtr checkPointRedo, int flags)
 {
-	CheckPointReplicationState(flags);
+	if (!(flags & CHECKPOINT_IS_SHUTDOWN))
+		CheckPointReplicationState(flags);
 
 	/* Write out all dirty data in SLRUs and the main buffer pool */
 	TRACE_POSTGRESQL_BUFFER_CHECKPOINT_START(flags);
