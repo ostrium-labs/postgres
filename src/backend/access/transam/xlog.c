@@ -6981,6 +6981,7 @@ SetLastWrittenLSNForBlockv(const XLogRecPtr *lsns, RelFileLocator relfilenode,
 	LastWrittenLsnCacheEntry* entry;
 	BufferTag	key;
 	bool		found;
+	XLogRecPtr	max = InvalidXLogRecPtr;
 
 	if (lsns == NULL || nblocks == 0 || lastWrittenLsnCacheSize == 0 ||
 		relfilenode.relNumber == InvalidOid)
@@ -7024,11 +7025,12 @@ SetLastWrittenLSNForBlockv(const XLogRecPtr *lsns, RelFileLocator relfilenode,
 		}
 		/* Link to the end of LRU list */
 		dlist_push_tail(&XLogCtl->lastWrittenLsnLRU, &entry->lru_node);
+		max = Max(max, lsn);
 	}
 
 	LWLockRelease(LastWrittenLsnLock);
 
-	return lsn;
+	return max;
 }
 
 /*
