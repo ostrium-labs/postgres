@@ -1554,7 +1554,8 @@ createdb(ParseState *pstate, const CreatedbStmt *stmt)
 		/*
 		 * Update global last written LSN after wal-logging create database command
 		 */
-		SetLastWrittenLSNForDatabase(XactLastRecEnd);
+		if (set_lwlsn_db_hook)
+			set_lwlsn_db_hook(XactLastRecEnd);
 
 		/*
 		 * Close pg_database, but keep lock till commit.
@@ -2221,7 +2222,8 @@ movedb(const char *dbname, const char *tblspcname)
 			lsn = XLogInsert(RM_DBASE_ID,
 							 XLOG_DBASE_CREATE_FILE_COPY | XLR_SPECIAL_REL_UPDATE);
 			// TODO: Do we really need to set the LSN here?
-			SetLastWrittenLSNForDatabase(lsn);
+			if (set_lwlsn_db_hook)
+				set_lwlsn_db_hook(lsn);
 		}
 
 		/*
@@ -3395,10 +3397,9 @@ dbase_redo(XLogReaderState *record)
 		 * Make sure any future requests to the page server see the new
 		 * database.
 		 */
-		{
-			XLogRecPtr	lsn = record->EndRecPtr;
-			SetLastWrittenLSNForDatabase(lsn);
-		}
+		if (set_lwlsn_db_hook)
+			set_lwlsn_db_hook(record->EndRecPtr);
+		
 
 		pfree(src_path);
 		pfree(dst_path);
@@ -3426,10 +3427,8 @@ dbase_redo(XLogReaderState *record)
 		 * Make sure any future requests to the page server see the new
 		 * database.
 		 */
-		{
-			XLogRecPtr	lsn = record->EndRecPtr;
-			SetLastWrittenLSNForDatabase(lsn);
-		}
+		if (set_lwlsn_db_hook)
+			set_lwlsn_db_hook(record->EndRecPtr);
 
 		pfree(dbpath);
 	}
