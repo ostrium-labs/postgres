@@ -81,6 +81,7 @@ main(int argc, char **argv)
 	static int	no_security_labels = 0;
 	static int	no_statistics = 0;
 	static int	no_subscriptions = 0;
+	static int	no_event_triggers = 0;
 	static int	strict_names = 0;
 	static int	statistics_only = 0;
 	static int	with_statistics = 0;
@@ -140,6 +141,7 @@ main(int argc, char **argv)
 		{"no-statistics", no_argument, &no_statistics, 1},
 		{"statistics", no_argument, &with_statistics, 1},
 		{"statistics-only", no_argument, &statistics_only, 1},
+		{"no-event-triggers", no_argument, &no_event_triggers, 1},
 		{"filter", required_argument, NULL, 4},
 		{"restrict-key", required_argument, NULL, 6},
 
@@ -455,6 +457,7 @@ main(int argc, char **argv)
 	opts->no_publications = no_publications;
 	opts->no_security_labels = no_security_labels;
 	opts->no_subscriptions = no_subscriptions;
+	opts->no_event_triggers = no_event_triggers;
 
 	if (if_exists && !opts->dropSchema)
 		pg_fatal("option %s requires option %s",
@@ -579,6 +582,7 @@ usage(const char *progname)
 	printf(_("  --no-security-labels         do not restore security labels\n"));
 	printf(_("  --no-statistics              do not restore statistics\n"));
 	printf(_("  --no-subscriptions           do not restore subscriptions\n"));
+	printf(_("  --no-event-triggers          do not restore event triggers\n"));
 	printf(_("  --no-table-access-method     do not restore table access methods\n"));
 	printf(_("  --no-tablespaces             do not restore tablespace assignments\n"));
 	printf(_("  --restrict-key=RESTRICT_KEY  use provided string as psql \\restrict key\n"));
