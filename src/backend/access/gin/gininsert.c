@@ -624,7 +624,7 @@ ginbuild(Relation heap, Relation index, IndexInfo *indexInfo)
 		elog(ERROR, "index \"%s\" already contains data",
 			 RelationGetRelationName(index));
 
-	smgr_start_unlogged_build(index->rd_smgr);
+	smgr_start_unlogged_build(RelationGetSmgr(index));
 
 	initGinState(&buildstate.ginstate, index);
 	buildstate.indtuples = 0;
@@ -775,7 +775,7 @@ ginbuild(Relation heap, Relation index, IndexInfo *indexInfo)
 	buildstate.buildStats.nTotalPages = RelationGetNumberOfBlocks(index);
 	ginUpdateStats(index, &buildstate.buildStats, true);
 
-	smgr_finish_unlogged_build_phase_1(index->rd_smgr);
+	smgr_finish_unlogged_build_phase_1(RelationGetSmgr(index));
 
 	/*
 	 * We didn't write WAL records as we built the index, so if WAL-logging is
@@ -788,7 +788,7 @@ ginbuild(Relation heap, Relation index, IndexInfo *indexInfo)
 						  true);
 	}
 
-	smgr_end_unlogged_build(index->rd_smgr);
+	smgr_end_unlogged_build(RelationGetSmgr(index));
 
 	/*
 	 * Return statistics
