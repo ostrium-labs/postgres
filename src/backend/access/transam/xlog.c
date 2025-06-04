@@ -6130,7 +6130,7 @@ StartupXLOG(void)
 	 * In a normal crash recovery, we can just extend the timeline we were in.
 	 */
 	newTLI = endOfRecoveryInfo->lastRecTLI;
-	if (ArchiveRecoveryRequested && !ZenithRecoveryRequested)
+	if (ArchiveRecoveryRequested)
 	{
 		newTLI = findNewestTimeLine(recoveryTargetTLI) + 1;
 		ereport(LOG,
