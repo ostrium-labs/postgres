@@ -41,9 +41,9 @@ extern PGDLLIMPORT XLogRecPtr XactLastCommitEnd;
  */
 #define REL_METADATA_PSEUDO_BLOCKNO InvalidBlockNumber
 
-extern bool			ZenithRecoveryRequested;
-extern XLogRecPtr	zenithLastRec;
-extern bool			zenithWriteOk;
+extern bool			NeonRecoveryRequested;
+extern XLogRecPtr	neonLastRec;
+extern bool			neonWriteOk;
 
 /* these variables are GUC parameters related to XLOG */
 extern PGDLLIMPORT int wal_segment_size;
@@ -348,7 +348,7 @@ extern restore_running_xacts_callback_t restore_running_xacts_callback;
 #define TABLESPACE_MAP			"tablespace_map"
 #define TABLESPACE_MAP_OLD		"tablespace_map.old"
 
-#define ZENITH_SIGNAL_FILE		"zenith.signal"
+#define NEON_SIGNAL_FILE		"neon.signal"
 
 /* files to signal promotion to primary */
 #define PROMOTE_SIGNAL_FILE		"promote"

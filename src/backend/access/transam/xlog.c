@@ -679,11 +679,11 @@ static MemoryContext walDebugCxt = NULL;
 
 
 /*
- * Variables read from 'zenith.signal' file.
+ * Variables read from 'neon.signal' file.
  */
-bool		ZenithRecoveryRequested = false;
-XLogRecPtr	zenithLastRec = InvalidXLogRecPtr;
-bool		zenithWriteOk = false;
+bool		NeonRecoveryRequested = false;
+XLogRecPtr	neonLastRec = InvalidXLogRecPtr;
+bool		neonWriteOk = false;
 
 
 static void CleanupAfterArchiveRecovery(TimeLineID EndOfLogTLI,
@@ -5504,11 +5504,11 @@ CheckRequiredParameterValues(void)
 }
 
 static void
-readZenithSignalFile(void)
+readNeonSignalFile(void)
 {
 	int			fd;
 
-	fd = BasicOpenFile(ZENITH_SIGNAL_FILE, O_RDONLY | PG_BINARY);
+	fd = BasicOpenFile(NEON_SIGNAL_FILE, O_RDONLY | PG_BINARY);
 	if (fd >= 0)
 	{
 		struct stat statbuf;
@@ -5516,30 +5516,30 @@ readZenithSignalFile(void)
 		char		prev_lsn_str[20];
 
 		/* Slurp the file into a string */
-		if (stat(ZENITH_SIGNAL_FILE, &statbuf) != 0)
+		if (stat(NEON_SIGNAL_FILE, &statbuf) != 0)
 			ereport(ERROR,
 					(errcode_for_file_access(),
 					 errmsg("could not stat file \"%s\": %m",
-							ZENITH_SIGNAL_FILE)));
+							NEON_SIGNAL_FILE)));
 		content = palloc(statbuf.st_size + 1);
 		if (read(fd, content, statbuf.st_size) != statbuf.st_size)
 			ereport(ERROR,
 					(errcode_for_file_access(),
 					 errmsg("could not read file \"%s\": %m",
-							ZENITH_SIGNAL_FILE)));
+							NEON_SIGNAL_FILE)));
 		content[statbuf.st_size] = '\0';
 
 		/* Parse it */
 		if (sscanf(content, "PREV LSN: %19s", prev_lsn_str) != 1)
 			ereport(ERROR,
 					(errcode(ERRCODE_OBJECT_NOT_IN_PREREQUISITE_STATE),
-					 errmsg("invalid data in file \"%s\"", ZENITH_SIGNAL_FILE)));
+					 errmsg("invalid data in file \"%s\"", NEON_SIGNAL_FILE)));
 
 		if (strcmp(prev_lsn_str, "invalid") == 0)
 		{
 			/* No prev LSN. Forbid starting up in read-write mode */
-			zenithLastRec = InvalidXLogRecPtr;
-			zenithWriteOk = false;
+			neonLastRec = InvalidXLogRecPtr;
+			neonWriteOk = false;
 		}
 		else if (strcmp(prev_lsn_str, "none") == 0)
 		{
@@ -5548,8 +5548,8 @@ readZenithSignalFile(void)
 			 * to start without it. This happens when you start the compute
 			 * node for the first time on a new branch.
 			 */
-			zenithLastRec = InvalidXLogRecPtr;
-			zenithWriteOk = true;
+			neonLastRec = InvalidXLogRecPtr;
+			neonWriteOk = true;
 		}
 		else
 		{
@@ -5559,22 +5559,22 @@ readZenithSignalFile(void)
 			if (sscanf(prev_lsn_str, "%X/%X", &hi, &lo) != 2)
 				ereport(ERROR,
 						(errcode(ERRCODE_OBJECT_NOT_IN_PREREQUISITE_STATE),
-						 errmsg("invalid data in file \"%s\"", ZENITH_SIGNAL_FILE)));
-			zenithLastRec = ((uint64) hi) << 32 | lo;
+						 errmsg("invalid data in file \"%s\"", NEON_SIGNAL_FILE)));
+			neonLastRec = ((uint64) hi) << 32 | lo;
 
 			/* If prev LSN is given, it better be valid */
-			if (zenithLastRec == InvalidXLogRecPtr)
+			if (neonLastRec == InvalidXLogRecPtr)
 				ereport(ERROR,
 						(errcode(ERRCODE_OBJECT_NOT_IN_PREREQUISITE_STATE),
-						 errmsg("invalid prev-LSN in file \"%s\"", ZENITH_SIGNAL_FILE)));
-			zenithWriteOk = true;
+						 errmsg("invalid prev-LSN in file \"%s\"", NEON_SIGNAL_FILE)));
+			neonWriteOk = true;
 		}
-		ZenithRecoveryRequested = true;
+		NeonRecoveryRequested = true;
 		close(fd);
 
 		elog(LOG,
-			 "[ZENITH] found 'zenith.signal' file. setting prev LSN to %X/%X",
-			 LSN_FORMAT_ARGS(zenithLastRec));
+			 "[NEON] found 'neon.signal' file. setting prev LSN to %X/%X",
+			 LSN_FORMAT_ARGS(neonLastRec));
 	}
 }
 
@@ -5610,14 +5610,14 @@ StartupXLOG(void)
 	CurrentResourceOwner = AuxProcessResourceOwner;
 
 	/*
-	 * Read zenith.signal before anything else.
+	 * Read neon.signal before anything else.
 	 */
-	readZenithSignalFile();
+	readNeonSignalFile();
 
 	/*
 	 * Check that contents look valid.
 	 */
-	if (!XRecOffIsValid(ControlFile->checkPoint) && !ZenithRecoveryRequested)
+	if (!XRecOffIsValid(ControlFile->checkPoint) && !NeonRecoveryRequested)
 		ereport(FATAL,
 				(errcode(ERRCODE_DATA_CORRUPTED),
 				 errmsg("control file contains invalid checkpoint location")));

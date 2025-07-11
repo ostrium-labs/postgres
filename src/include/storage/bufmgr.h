@@ -175,7 +175,7 @@ extern PGDLLIMPORT int bgwriter_flush_after;
 
 extern PGDLLIMPORT const PgAioHandleCallbacks aio_shared_buffer_readv_cb;
 extern PGDLLIMPORT const PgAioHandleCallbacks aio_local_buffer_readv_cb;
-extern bool	zenith_test_evict;
+extern bool	neon_test_evict;
 
 /* in buf_init.c */
 extern PGDLLIMPORT char *BufferBlocks;

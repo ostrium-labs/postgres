@@ -258,7 +258,7 @@ GetLocalVictimBuffer(void)
 
 			if (-victim_bufid - 1 == wal_redo_buffer)
 			{
-				/* ZENITH: Prevent eviction of the buffer with target wal redo page */
+				/* NEON: Prevent eviction of the buffer with target wal redo page */
 				continue;
 			}
 

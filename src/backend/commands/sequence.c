@@ -55,7 +55,7 @@
  * so we pre-log a few fetches in advance. In the event of
  * crash we can lose (skip over) as many values as we pre-logged.
  */
-/* NEON XXX: to ensure sequence order of sequence in Zenith we need to WAL log each sequence update. */
+/* NEON XXX: to ensure sequence order of sequence in Neon we need to WAL log each sequence update. */
 /* #define SEQ_LOG_VALS	32 */
 #define SEQ_LOG_VALS	0
 
