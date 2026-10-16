@@ -1,0 +1,18 @@
+# Code owners (Loams Postgres design §51 §3.5, NF1 Task 5).
+#
+# §3.5 names the teams @ostrium-labs/postgres-maintainers and
+# @ostrium-labs/security. They do not exist yet: creating them and naming
+# their maintainers (at least two each) is an owner action (Q722, Q734).
+# Until then every section is owned by the organisation's admins. When a team
+# exists, replace the owners of its sections with it. A later matching line
+# wins, so keep the order.
+
+# Everything.
+# Team: @ostrium-labs/postgres-maintainers
+*                   @dina-kar @Kesh3805 @ostrium-tech
+
+# Security: CI and these rules themselves.
+# Team: @ostrium-labs/security
+/.github/           @dina-kar @Kesh3805 @ostrium-tech
+/CODEOWNERS         @dina-kar @Kesh3805 @ostrium-tech
+/SECURITY.md        @dina-kar @Kesh3805 @ostrium-tech
