@@ -596,7 +596,8 @@ scalarineqsel(PlannerInfo *root, Oid operator, bool isgt, bool iseq,
 		 * make an estimate based on comparing the constant to the table size.
 		 */
 		if (vardata->var && IsA(vardata->var, Var) &&
-			((Var *) vardata->var)->varattno == SelfItemPointerAttributeNumber)
+			((Var *) vardata->var)->varattno == SelfItemPointerAttributeNumber &&
+			consttype == TIDOID)
 		{
 			ItemPointer itemptr;
 			double		block;
@@ -5260,7 +5261,11 @@ examine_variable(PlannerInfo *root, Node *node, int varRelid,
 					vardata->statsTuple =
 						statext_expressions_load(info->statOid, rte->inh, pos);
 
-					vardata->freefunc = ReleaseDummy;
+					/* Nothing to release if no data found */
+					if (vardata->statsTuple != NULL)
+					{
+						vardata->freefunc = ReleaseDummy;
+					}
 
 					/*
 					 * Test if user has permission to access all rows from the

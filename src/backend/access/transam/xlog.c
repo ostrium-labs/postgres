@@ -6307,6 +6307,25 @@ GetWALInsertionTimeLine(void)
 }
 
 /*
+ * GetWALInsertionTimeLineIfSet -- If the system is not in recovery, returns
+ * the WAL insertion timeline; else, returns 0. Wherever possible, use
+ * GetWALInsertionTimeLine() instead, since it's cheaper. Note that this
+ * function decides recovery has ended as soon as the insert TLI is set, which
+ * happens before we set XLogCtl->SharedRecoveryState to RECOVERY_STATE_DONE.
+ */
+TimeLineID
+GetWALInsertionTimeLineIfSet(void)
+{
+	TimeLineID	insertTLI;
+
+	SpinLockAcquire(&XLogCtl->info_lck);
+	insertTLI = XLogCtl->InsertTimeLineID;
+	SpinLockRelease(&XLogCtl->info_lck);
+
+	return insertTLI;
+}
+
+/*
  * GetLastImportantRecPtr -- Returns the LSN of the last important record
  * inserted. All records not explicitly marked as unimportant are considered
  * important.
@@ -9222,6 +9241,22 @@ GetXLogInsertRecPtr(void)
 	SpinLockRelease(&Insert->insertpos_lck);
 
 	return XLogBytePosToRecPtr(current_bytepos);
+}
+
+/*
+ * Get latest WAL record end pointer
+ */
+XLogRecPtr
+GetXLogInsertEndRecPtr(void)
+{
+	XLogCtlInsert *Insert = &XLogCtl->Insert;
+	uint64		current_bytepos;
+
+	SpinLockAcquire(&Insert->insertpos_lck);
+	current_bytepos = Insert->CurrBytePos;
+	SpinLockRelease(&Insert->insertpos_lck);
+
+	return XLogBytePosToEndRecPtr(current_bytepos);
 }
 
 /*

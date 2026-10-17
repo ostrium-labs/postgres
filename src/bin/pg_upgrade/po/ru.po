@@ -1,13 +1,13 @@
 # Russian message translation file for pg_upgrade
 # Copyright (C) 2017 PostgreSQL Global Development Group
 # This file is distributed under the same license as the PostgreSQL package.
-# SPDX-FileCopyrightText: 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025 Alexander Lakhin <a.lakhin@postgrespro.ru>
+# SPDX-FileCopyrightText: 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026 Alexander Lakhin <a.lakhin@postgrespro.ru>
 # Maxim Yablokov <m.yablokov@postgrespro.ru>, 2021.
 msgid ""
 msgstr ""
 "Project-Id-Version: pg_upgrade (PostgreSQL) 10\n"
 "Report-Msgid-Bugs-To: pgsql-bugs@lists.postgresql.org\n"
-"POT-Creation-Date: 2025-08-09 07:12+0300\n"
+"POT-Creation-Date: 2026-05-10 08:01+0300\n"
 "PO-Revision-Date: 2025-08-09 07:24+0300\n"
 "Last-Translator: Alexander Lakhin <exclusion@gmail.com>\n"
 "Language-Team: Russian <pgsql-ru-general@postgresql.org>\n"
@@ -185,7 +185,7 @@ msgstr "Создание скрипта для удаления старого �
 
 #: check.c:487 check.c:660 check.c:776 check.c:871 check.c:1000 check.c:1077
 #: check.c:1155 check.c:1435 check.c:1509 file.c:339 function.c:163
-#: option.c:476 version.c:116 version.c:292 version.c:426
+#: option.c:476 version.c:116 version.c:323 version.c:457
 #, c-format
 msgid "could not open file \"%s\": %s"
 msgstr "не удалось открыть файл \"%s\": %s"
@@ -232,7 +232,7 @@ msgstr ""
 #: check.c:675 check.c:796 check.c:894 check.c:1020 check.c:1097 check.c:1175
 #: check.c:1235 check.c:1296 check.c:1325 check.c:1359 check.c:1390
 #: check.c:1449 check.c:1530 function.c:185 version.c:192 version.c:232
-#: version.c:378
+#: version.c:409
 #, c-format
 msgid "fatal"
 msgstr "сбой"
@@ -596,7 +596,7 @@ msgstr "В исходном кластере не хватает информа�
 msgid "The target cluster lacks cluster state information:"
 msgstr "В целевом кластере не хватает информации о состоянии кластера:"
 
-#: controldata.c:214 dump.c:50 exec.c:119 pg_upgrade.c:519 pg_upgrade.c:556
+#: controldata.c:214 dump.c:54 exec.c:119 pg_upgrade.c:519 pg_upgrade.c:556
 #: relfilenumber.c:231 server.c:34 util.c:337
 #, c-format
 msgid "%s"
@@ -864,7 +864,7 @@ msgstr ""
 msgid "Creating dump of global objects"
 msgstr "Формирование выгрузки глобальных объектов"
 
-#: dump.c:32
+#: dump.c:33
 #, c-format
 msgid "Creating dump of database schemas"
 msgstr "Формирование выгрузки схем базы данных"
@@ -1768,17 +1768,17 @@ msgstr "копирование \"%s\" в \"%s\""
 msgid "linking \"%s\" to \"%s\""
 msgstr "создание ссылки на \"%s\" в \"%s\""
 
-#: server.c:39 server.c:143 util.c:248 util.c:278
+#: server.c:39 server.c:145 util.c:248 util.c:278
 #, c-format
 msgid "Failure, exiting\n"
 msgstr "Ошибка, выполняется выход\n"
 
-#: server.c:133
+#: server.c:135
 #, c-format
 msgid "executing: %s"
 msgstr "выполняется: %s"
 
-#: server.c:139
+#: server.c:141
 #, c-format
 msgid ""
 "SQL command failed\n"
@@ -1789,17 +1789,17 @@ msgstr ""
 "%s\n"
 "%s"
 
-#: server.c:169
+#: server.c:171
 #, c-format
 msgid "could not open version file \"%s\": %m"
 msgstr "не удалось открыть файл с версией \"%s\": %m"
 
-#: server.c:173
+#: server.c:175
 #, c-format
 msgid "could not parse version file \"%s\""
 msgstr "не удалось разобрать файл с версией \"%s\""
 
-#: server.c:288
+#: server.c:290
 #, c-format
 msgid ""
 "\n"
@@ -1808,7 +1808,7 @@ msgstr ""
 "\n"
 "%s"
 
-#: server.c:292
+#: server.c:294
 #, c-format
 msgid ""
 "could not connect to source postmaster started with the command:\n"
@@ -1818,7 +1818,7 @@ msgstr ""
 "командой:\n"
 "%s"
 
-#: server.c:296
+#: server.c:298
 #, c-format
 msgid ""
 "could not connect to target postmaster started with the command:\n"
@@ -1828,26 +1828,26 @@ msgstr ""
 "командой:\n"
 "%s"
 
-#: server.c:310
+#: server.c:312
 #, c-format
 msgid "pg_ctl failed to start the source server, or connection failed"
 msgstr ""
 "программа pg_ctl не смогла запустить исходный сервер, либо к нему не удалось "
 "подключиться"
 
-#: server.c:312
+#: server.c:314
 #, c-format
 msgid "pg_ctl failed to start the target server, or connection failed"
 msgstr ""
 "программа pg_ctl не смогла запустить целевой сервер, либо к нему не удалось "
 "подключиться"
 
-#: server.c:357
+#: server.c:359
 #, c-format
 msgid "out of memory"
 msgstr "нехватка памяти"
 
-#: server.c:370
+#: server.c:372
 #, c-format
 msgid "libpq environment variable %s has a non-local server value: %s"
 msgstr ""
@@ -1943,17 +1943,17 @@ msgstr ""
 "файле:\n"
 "    %s"
 
-#: version.c:257
+#: version.c:288
 #, c-format
 msgid "Checking for hash indexes"
 msgstr "Проверка хеш-индексов"
 
-#: version.c:335
+#: version.c:366
 #, c-format
 msgid "warning"
 msgstr "предупреждение"
 
-#: version.c:337
+#: version.c:368
 #, c-format
 msgid ""
 "\n"
@@ -1968,7 +1968,7 @@ msgstr ""
 "перестроить с помощью команды REINDEX. По завершении обновления вы получите\n"
 "инструкции по выполнению REINDEX."
 
-#: version.c:343
+#: version.c:374
 #, c-format
 msgid ""
 "\n"
@@ -1987,13 +1987,13 @@ msgstr ""
 "будучи выполненным администратором БД в psql, пересоздаст все неправильные\n"
 "индексы; до этого никакие хеш-индексы не будут использоваться."
 
-#: version.c:369
+#: version.c:400
 #, c-format
 msgid "Checking for invalid \"sql_identifier\" user columns"
 msgstr ""
 "Проверка неправильных пользовательских столбцов типа \"sql_identifier\""
 
-#: version.c:379
+#: version.c:410
 #, c-format
 msgid ""
 "Your installation contains the \"sql_identifier\" data type in user tables.\n"
@@ -2010,17 +2010,17 @@ msgstr ""
 "Список проблемных столбцов приведён в файле:\n"
 "    %s"
 
-#: version.c:402
+#: version.c:433
 #, c-format
 msgid "Checking for extension updates"
 msgstr "Проверка обновлённых расширений"
 
-#: version.c:450
+#: version.c:481
 #, c-format
 msgid "notice"
 msgstr "замечание"
 
-#: version.c:451
+#: version.c:482
 #, c-format
 msgid ""
 "\n"
