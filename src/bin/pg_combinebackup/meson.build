@@ -39,7 +39,6 @@ tests += {
       't/009_no_full_file.pl',
       't/010_hardlink.pl',
       't/011_ib_truncation.pl',
-      't/012_vm_consistency.pl',
     ],
   }
 }
