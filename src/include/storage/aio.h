@@ -310,6 +310,14 @@ extern char *pgaio_io_get_target_description(PgAioHandle *ioh);
 /* functions in aio_callback.c */
 extern void pgaio_io_register_callbacks(PgAioHandle *ioh, PgAioHandleCallbackID cb_id,
 										uint8 cb_data);
+
+/*
+ * NEON (Loams LP-0044, NF2 Task 3, D1110): stage an IO whose data the caller
+ * has already transferred, and complete it at once with `result` (bytes, or
+ * -errno), running the registered callbacks. For storage managers without
+ * file descriptors, which read synchronously through their own channel.
+ */
+extern void pgaio_io_stage_completed(PgAioHandle *ioh, PgAioOp op, int result);
 extern void pgaio_io_set_handle_data_64(PgAioHandle *ioh, uint64 *data, uint8 len);
 extern void pgaio_io_set_handle_data_32(PgAioHandle *ioh, uint32 *data, uint8 len);
 extern uint64 *pgaio_io_get_handle_data(PgAioHandle *ioh, uint8 *len);

@@ -67,6 +67,7 @@
 #include "catalog/pg_tablespace.h"
 #include "lib/ilist.h"
 #include "miscadmin.h"
+#include "port/pg_iovec.h"
 #include "storage/aio.h"
 #include "storage/bufmgr.h"
 #include "storage/ipc.h"
@@ -110,6 +111,9 @@ static dlist_head unpinned_relns;
 
 /* local function prototypes */
 static void smgrdestroy(SMgrRelation reln);
+static void smgr_startreadv_sync(PgAioHandle *ioh,
+								 SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
+								 void **buffers, BlockNumber nblocks);
 
 static void smgr_aio_reopen(PgAioHandle *ioh);
 static char *smgr_aio_describe_identity(const PgAioTargetData *sd);
@@ -669,7 +673,11 @@ smgrmaxcombine(SMgrRelation reln, ForkNumber forknum,
 	uint32		ret;
 
 	HOLD_INTERRUPTS();
-	ret = (*reln->smgr).smgr_maxcombine(reln, forknum, blocknum);
+	/* NEON: an smgr may leave combining to the read stream (LP-0044) */
+	if ((*reln->smgr).smgr_maxcombine)
+		ret = (*reln->smgr).smgr_maxcombine(reln, forknum, blocknum);
+	else
+		ret = PG_IOV_MAX;
 	RESUME_INTERRUPTS();
 
 	return ret;
@@ -724,10 +732,53 @@ smgrstartreadv(PgAioHandle *ioh,
 			   void **buffers, BlockNumber nblocks)
 {
 	HOLD_INTERRUPTS();
-	(*reln->smgr).smgr_startreadv(ioh,
-											 reln, forknum, blocknum, buffers,
-											 nblocks);
+	if ((*reln->smgr).smgr_startreadv)
+		(*reln->smgr).smgr_startreadv(ioh,
+									  reln, forknum, blocknum, buffers,
+									  nblocks);
+	else
+		smgr_startreadv_sync(ioh, reln, forknum, blocknum, buffers, nblocks);
 	RESUME_INTERRUPTS();
+}
+
+/*
+ * NEON (Loams LP-0044, NF2 Task 3, D1110): an smgr without file descriptors
+ * (Neon's, which fetches pages from the pageserver) leaves smgr_startreadv
+ * unset. Its read is then done synchronously through smgr_readv, and the
+ * AIO handle completes at once with md's read callbacks, which turn the byte
+ * count into blocks and report short reads, as for md.c's own reads.
+ */
+static void
+smgr_startreadv_sync(PgAioHandle *ioh,
+					 SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
+					 void **buffers, BlockNumber nblocks)
+{
+	struct iovec *iov;
+	int			iovcnt;
+	PgAioOpData *op_data;
+
+	iovcnt = pgaio_io_get_iovec(ioh, &iov);
+	Assert(nblocks <= iovcnt);
+	if (nblocks > iovcnt)
+		elog(ERROR, "too many blocks in one read: %u", nblocks);
+
+	for (BlockNumber i = 0; i < nblocks; i++)
+	{
+		iov[i].iov_base = buffers[i];
+		iov[i].iov_len = BLCKSZ;
+	}
+
+	pgaio_io_set_target_smgr(ioh, reln, forknum, blocknum, nblocks, false);
+	pgaio_io_register_callbacks(ioh, PGAIO_HCB_MD_READV, 0);
+
+	(*reln->smgr).smgr_readv(reln, forknum, blocknum, buffers, nblocks);
+
+	op_data = pgaio_io_get_op_data(ioh);
+	op_data->read.fd = -1;
+	op_data->read.offset = 0;
+	op_data->read.iov_length = nblocks;
+
+	pgaio_io_stage_completed(ioh, PGAIO_OP_READV, (int) (nblocks * BLCKSZ));
 }
 
 /*
@@ -1004,6 +1055,12 @@ smgrfd(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum, uint32 *off)
 	 */
 	Assert(!INTERRUPTS_CAN_BE_PROCESSED());
 
+	/* NEON: an smgr without file descriptors has no smgr_fd (LP-0044) */
+	if ((*reln->smgr).smgr_fd == NULL)
+		elog(ERROR, "storage manager of relation %u/%u/%u has no file descriptors",
+			 reln->smgr_rlocator.locator.spcOid,
+			 reln->smgr_rlocator.locator.dbOid,
+			 reln->smgr_rlocator.locator.relNumber);
 	fd = (*reln->smgr).smgr_fd(reln, forknum, blocknum, off);
 
 	return fd;

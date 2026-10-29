@@ -479,6 +479,46 @@ pgaio_io_stage(PgAioHandle *ioh, PgAioOp op)
 	RESUME_INTERRUPTS();
 }
 
+/*
+ * NEON (Loams LP-0044, NF2 Task 3, D1110): like pgaio_io_stage() followed by
+ * synchronous execution, except that the caller has already performed the
+ * IO (into the handle's iovec buffers) and passes its result. The IO is never
+ * submitted to an IO method, so this works with any io_method; there is no
+ * file descriptor to reopen or to read from.
+ */
+void
+pgaio_io_stage_completed(PgAioHandle *ioh, PgAioOp op, int result)
+{
+	Assert(ioh->state == PGAIO_HS_HANDED_OUT);
+	Assert(pgaio_my_backend->handed_out_io == ioh);
+	Assert(pgaio_io_has_target(ioh));
+
+	HOLD_INTERRUPTS();
+
+	ioh->op = op;
+	ioh->result = 0;
+
+	pgaio_io_update_state(ioh, PGAIO_HS_DEFINED);
+
+	/* allow a new IO to be staged */
+	pgaio_my_backend->handed_out_io = NULL;
+
+	pgaio_io_call_stage(ioh);
+
+	pgaio_io_update_state(ioh, PGAIO_HS_STAGED);
+
+	pgaio_debug_io(DEBUG3, ioh, "staged, already completed (result %d)", result);
+
+	pgaio_io_prepare_submit(ioh);
+
+	START_CRIT_SECTION();
+	ioh->result = result;
+	pgaio_io_process_completion(ioh, result);
+	END_CRIT_SECTION();
+
+	RESUME_INTERRUPTS();
+}
+
 bool
 pgaio_io_needs_synchronous_execution(PgAioHandle *ioh)
 {
