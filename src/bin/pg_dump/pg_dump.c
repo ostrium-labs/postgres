@@ -8747,8 +8747,7 @@ getEventTriggers(Archive *fout)
 	if (fout->dopt->no_event_triggers)
 	{
 		pg_log_info("skipping event triggers");
-		*numEventTriggers = 0;
-		return NULL;
+		return;
 	}
 
 	query = createPQExpBuffer();

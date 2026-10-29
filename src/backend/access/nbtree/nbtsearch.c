@@ -2940,7 +2940,8 @@ _bt_endpoint(IndexScanDesc scan, ScanDirection dir)
 		{
 			PredicateLockRelation(rel, scan->xs_snapshot);
 			so->currPos.buf = _bt_get_endpoint(rel, 0,
-											   ScanDirectionIsBackward(dir));
+											   ScanDirectionIsBackward(dir),
+											   &parent);
 		}
 
 		if (!BufferIsValid(so->currPos.buf))

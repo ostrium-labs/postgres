@@ -5238,7 +5238,8 @@ RelationCopyStorageUsingBuffer(RelFileLocator srclocator,
 	/* Initialize streaming read */
 	p.current_blocknum = 0;
 	p.last_exclusive = nblocks;
-	src_smgr = smgropen(srclocator, INVALID_PROC_NUMBER);
+	src_smgr = smgropen(srclocator, INVALID_PROC_NUMBER,
+						permanent ? RELPERSISTENCE_PERMANENT : RELPERSISTENCE_UNLOGGED);
 
 	/*
 	 * It is safe to use batchmode as block_range_read_stream_cb takes no
