@@ -568,8 +568,6 @@ read_stream_begin_impl(int flags,
 	uint32		max_possible_buffer_limit;
 	Oid			tablespace_id;
 
-	smgr = RelationGetSmgr(rel);
-
 	/*
 	 * Reject attempts to read non-local temporary relations; we would be
 	 * likely to get wrong data since we have no visibility into the owning
